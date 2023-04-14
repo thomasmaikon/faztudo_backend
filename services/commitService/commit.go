@@ -1,27 +1,25 @@
 package commitService
 
 import (
-	"database/sql"
 	"projeto/FazTudo/dto"
-	"projeto/FazTudo/infrastructure/database"
 	"projeto/FazTudo/repositorys"
 	"projeto/FazTudo/services/loginService"
 )
 
 type commitService struct {
-	db *sql.DB
+	repositorys.RepositoryCommit
+	loginService.LoginService
 }
 
 func NewCommitService() *commitService {
 	return &commitService{
-		db: database.GetDBAccess(),
+		RepositoryCommit: repositorys.NewCommitRepository(),
+		LoginService:     loginService.NewLoginService(),
 	}
 }
 
-func (c *commitService) GetCommitByServicePage(servicePageid int) ([]dto.CommitOutput, error) {
-	repository := repositorys.NewCommitRepository(c.db)
-
-	output, err := repository.GetCommitByServicePageId(servicePageid)
+func (service *commitService) GetCommitByServicePage(servicePageid int) ([]dto.CommitOutput, error) {
+	output, err := service.RepositoryCommit.GetCommitByServicePageId(servicePageid)
 	if err != nil {
 		return nil, err
 	}
@@ -29,16 +27,16 @@ func (c *commitService) GetCommitByServicePage(servicePageid int) ([]dto.CommitO
 	return output, nil
 }
 
-func (c *commitService) CreateCommit(login string, servicePageId int, commit dto.SimpleCommitInput) error {
-	service := loginService.NewLoginSerice()
+func (service *commitService) CreateCommit(login string, servicePageId int, commit dto.SimpleCommitInput) error {
+	//	service := loginService.NewLoginSerice()
 
-	id, err := service.GetIdByLogin(login)
+	id, err := service.LoginService.GetIdByLogin(login)
 	if err != nil {
 		return err
 	}
 
-	repository := repositorys.NewCommitRepository(c.db)
-	return repository.AddCommit(dto.CommitInput{
+	//repository := repositorys.NewCommitRepository(c.db)
+	return service.RepositoryCommit.AddCommit(dto.CommitInput{
 		IdLogin:       id,
 		IdServicePage: servicePageId,
 		Commit:        commit.Commit,

@@ -2,108 +2,105 @@ package repositorys
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"math"
 	"projeto/FazTudo/consts"
 	"projeto/FazTudo/dto"
+	"projeto/FazTudo/infrastructure/database"
+
+	"gorm.io/gorm"
 )
 
-type servicesPage struct {
-	db *sql.DB
+type RepositoryServicePage interface {
+	GetAllServicesPaginated(paginationIndex, paginationSize int) ([]dto.ServicePageOutput, error)
+	GetAmountAtPages(paginationSize int) (int, error)
+	CreateServicePage(input dto.ServicePageInput, fkLogin int) error
+	GetServicesPageByLogin(login string) ([]dto.ServicePageOutput, error)
+	GetServicePageById(id int) (dto.ServicePageOutput, error)
 }
 
-func NewServicesPage(db *sql.DB) *servicesPage {
-	return &servicesPage{db}
+type servicesPageRepository struct {
+	db *gorm.DB
+	RepositoryServicePage
 }
 
-func (s *servicesPage) GetAllServicesPaginated(paginationIndex, paginationSize int) ([]dto.ServicePageOutput, error) {
+func NewServicesPageRepository() RepositoryServicePage {
+	return &servicesPageRepository{
+		db: database.GetDB(),
+	}
+}
+
+func (repository *servicesPageRepository) GetAllServicesPaginated(paginationIndex, paginationSize int) ([]dto.ServicePageOutput, error) {
+
+	var outputList []dto.ServicePageOutput
+
 	context, cancelContext := context.WithTimeout(context.Background(), consts.QueryTimeoutMedium)
 	defer cancelContext()
 
 	jump := paginationIndex * paginationSize
 	query := fmt.Sprintf("SELECT id, name, description, image, value, positive_evaluations, negative_evaluations FROM service OFFSET %x ROWS LIMIT %x", jump, paginationSize)
 
-	rows, err := s.db.QueryContext(context, query)
-
-	var outputList []dto.ServicePageOutput
-
-	for rows.Next() {
-		output := dto.ServicePageOutput{}
-		err = rows.Scan(&output.Id, &output.Name, &output.Description, &output.Image, &output.Value, &output.PositiveEvaluations, &output.NegativeEvaluations)
-		if err != nil {
-			return nil, err
-		}
-		outputList = append(outputList, output)
+	err := repository.db.WithContext(context).
+		Raw(query).
+		Scan(&outputList)
+	//QueryContext(context, query)
+	if err.Error != nil {
+		return nil, err.Error
 	}
-
-	return outputList, err
+	return outputList, nil
 }
 
-func (s *servicesPage) GetAmountAtPages(paginationSize int) (int, error) {
+func (repository *servicesPageRepository) GetAmountAtPages(paginationSize int) (int, error) {
 	pgSize := float64(paginationSize)
+
+	var amountRows int
+
 	context, cancelContext := context.WithTimeout(context.Background(), consts.QueryTimeoutLong)
 	defer cancelContext()
 
-	query := "SELECT count(*) FROM service"
+	query := "SELECT COUNT(*) FROM service"
 
-	rows, err := s.db.QueryContext(context, query)
-	if err != nil {
-		return 0, err
+	err := repository.db.WithContext(context).Raw(query).Scan(&amountRows) //.Raw(query).Scan(&amountRows)
+	if err.Error != nil {
+		return 0, err.Error
 	}
 
-	var amountRows float64
-
-	for rows.Next() {
-		err = rows.Scan(&amountRows)
-		if err != nil {
-			return 0, err
-		}
-	}
-	result := int(math.Round(amountRows / pgSize))
+	result := int(math.Round(float64(amountRows) / pgSize))
 	return result, nil
 }
 
-func (s *servicesPage) CreateServicePage(input dto.ServicePageInput, fkLogin int) error {
+func (repository *servicesPageRepository) CreateServicePage(input dto.ServicePageInput, fkLogin int) error {
 	context, cancelContext := context.WithTimeout(context.Background(), consts.QueryTimeoutMedium)
 	defer cancelContext()
 
 	query := fmt.Sprintf("INSERT INTO service (fk_login, name, image, value, description) VALUES (%x,'%s', '%s', '%f', '%s')", fkLogin, input.Name, input.Image, input.Value, input.Description)
 
-	_, err := s.db.QueryContext(context, query)
-	if err != nil {
-		return err
+	err := repository.db.WithContext(context).Exec(query)
+	if err.Error != nil {
+		return err.Error
 	}
 
 	return nil
 }
 
-func (s *servicesPage) GetServicesPageByLogin(login string) ([]dto.ServicePageOutput, error) {
+func (repository *servicesPageRepository) GetServicesPageByLogin(login string) ([]dto.ServicePageOutput, error) {
+
+	var outputList []dto.ServicePageOutput
+
 	context, cancelContext := context.WithTimeout(context.Background(), consts.QueryTimeoutMedium)
 	defer cancelContext()
 
 	query := fmt.Sprintf("SELECT S.id, S.name, S.description, S.image, S.value, S.positive_evaluations, S.negative_evaluations FROM service AS S INNER JOIN credentials AS C on c.ID = S.fk_login WHERE C.LOGIN = '%s'", login)
 
-	rows, err := s.db.QueryContext(context, query)
-	if err != nil {
-		return nil, err
+	err := repository.db.WithContext(context).Raw(query).Scan(&outputList)
+	if err.Error != nil {
+		return nil, err.Error
 	}
 
-	var outputList []dto.ServicePageOutput
-
-	for rows.Next() {
-		output := dto.ServicePageOutput{}
-		err = rows.Scan(&output.Id, &output.Name, &output.Description, &output.Image, &output.Value, &output.PositiveEvaluations, &output.NegativeEvaluations)
-		if err != nil {
-			return nil, err
-		}
-		outputList = append(outputList, output)
-	}
-
-	return outputList, err
+	return outputList, nil
 }
 
-func (s *servicesPage) GetServicePageById(id int) (dto.ServicePageOutput, error) {
+func (repository *servicesPageRepository) GetServicePageById(id int) (dto.ServicePageOutput, error) {
 	context, cancelContext := context.WithTimeout(context.Background(), consts.QueryTimeoutMedium)
 	defer cancelContext()
 
@@ -111,18 +108,7 @@ func (s *servicesPage) GetServicePageById(id int) (dto.ServicePageOutput, error)
 
 	query := fmt.Sprintf("SELECT id, name, description, image, value, positive_evaluations, negative_evaluations FROM service WHERE id = '%x'", id)
 
-	rows, err := s.db.QueryContext(context, query)
-	if err != nil {
-		return outputList, err
-	}
+	err := repository.db.WithContext(context).Raw(query).Scan(&outputList)
 
-	for rows.Next() {
-
-		err = rows.Scan(&outputList.Id, &outputList.Name, &outputList.Description, &outputList.Image, &outputList.Value, &outputList.PositiveEvaluations, &outputList.NegativeEvaluations)
-		if err != nil {
-			return outputList, err
-		}
-	}
-
-	return outputList, err
+	return outputList, err.Error
 }

@@ -2,77 +2,75 @@ package repositorys
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"projeto/FazTudo/consts"
 	"projeto/FazTudo/dto"
+	"projeto/FazTudo/entitys"
+	"projeto/FazTudo/infrastructure/database"
+
+	"gorm.io/gorm"
 )
 
+type RepositoryLogin interface {
+	FindLogin(inputDTO dto.LoginDTO) (dto.LoginDTO, error)
+	CreateLogin(inputDTO dto.LoginDTO) error
+	GetIdByLogin(login string) (int, error)
+}
+
 type loginRepository struct {
-	db *sql.DB
+	db *gorm.DB
 }
 
-func NewLoginRepository(db *sql.DB) *loginRepository {
-	return &loginRepository{db}
+func NewLoginRepository() RepositoryLogin {
+	return &loginRepository{database.GetDB()}
 }
 
-func (l *loginRepository) FindLogin(inputDTO dto.LoginDTO) (dto.LoginDTO, error) {
+func (repository *loginRepository) FindLogin(inputDTO dto.LoginDTO) (dto.LoginDTO, error) {
+
+	var user entitys.LoginUser
 
 	ctx, cancel := context.WithTimeout(context.Background(), consts.QueryTimeoutShort)
 	defer cancel()
 
 	query := fmt.Sprintf("SELECT login, password FROM credentials WHERE credentials.login like '%s' and credentials.password like '%s'", inputDTO.Login, inputDTO.Password)
 
-	rows, err := l.db.QueryContext(ctx, query)
-	if err != nil {
-		return dto.LoginDTO{}, err
+	err := repository.db.WithContext(ctx).Raw(query).Scan(&user)
+	if err.Error != nil {
+		return dto.LoginDTO{}, err.Error
 	}
 
-	var login string
-	var password string
-
-	rows.Next()
-	err = rows.Scan(&login, &password)
-	if err != nil {
-		return dto.LoginDTO{}, err
-	}
-
-	return dto.LoginDTO{login, password}, nil
+	return dto.LoginDTO{user.Login, user.Password}, nil
 }
 
-func (l *loginRepository) CreateLogin(inputDTO dto.LoginDTO) error {
+func (repository *loginRepository) CreateLogin(inputDTO dto.LoginDTO) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), consts.QueryTimeoutShort)
 	defer cancel()
 
 	query := fmt.Sprintf("INSERT INTO credentials (login, password) VALUES ('%s', '%s')", inputDTO.Login, inputDTO.Password)
 
-	rows, err := l.db.ExecContext(ctx, query)
-	if err != nil {
-		return err
+	err := repository.db.WithContext(ctx).Exec(query)
+	if err.Error != nil {
+		return err.Error
 	}
 
-	fmt.Println(rows.RowsAffected())
+	//fmt.Println(rows.RowsAffected())
 	return nil
 }
 
-func (l *loginRepository) GetIdByLogin(login string) (int, error) {
+func (repository *loginRepository) GetIdByLogin(login string) (int, error) {
+
+	var userId int
+
 	ctx, cancel := context.WithTimeout(context.Background(), consts.QueryTimeoutShort)
 	defer cancel()
 
 	query := fmt.Sprintf("SELECT ID FROM credentials WHERE login = '%s'", login)
 
-	rows, err := l.db.QueryContext(ctx, query)
-	if err != nil {
-		return 0, err
+	err := repository.db.WithContext(ctx).Raw(query).Scan(&userId)
+	if err.Error != nil {
+		return 0, err.Error
 	}
 
-	var id int
-	rows.Next()
-	err = rows.Scan(&id)
-	if err != nil {
-		return 0, err
-	}
-
-	return id, nil
+	return userId, nil
 }

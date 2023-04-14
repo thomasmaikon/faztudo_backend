@@ -2,52 +2,62 @@ package repositorys
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"projeto/FazTudo/consts"
 	"projeto/FazTudo/dto"
+	"projeto/FazTudo/entitys"
+	"projeto/FazTudo/infrastructure/database"
+
+	"gorm.io/gorm"
 )
 
+type RepositoryCommit interface {
+	AddCommit(input dto.CommitInput) error
+	GetCommitByServicePageId(servicePageId int) ([]dto.CommitOutput, error)
+}
+
 type commitRepository struct {
-	db *sql.DB
+	db *gorm.DB
 }
 
-func NewCommitRepository(db *sql.DB) *commitRepository {
-	return &commitRepository{db}
+func NewCommitRepository() RepositoryCommit {
+	return &commitRepository{database.GetDB()}
 }
 
-func (c *commitRepository) AddCommit(input dto.CommitInput) error {
+func (repository *commitRepository) AddCommit(input dto.CommitInput) error {
 	ctx, cancel := context.WithTimeout(context.Background(), consts.QueryTimeoutMedium)
 	defer cancel()
 
-	query := fmt.Sprintf("INSERT INTO commit (fk_login, fk_service_page, commit) VALUES ('%x', '%x', '%s')", input.IdLogin, input.IdServicePage, input.Commit)
+	//query := fmt.Sprintf("INSERT INTO commit (fk_login, fk_service_page, commit) VALUES ('%x', '%x', '%s')", input.IdLogin, input.IdServicePage, input.Commit)
 
-	_, err := c.db.QueryContext(ctx, query)
-	if err != nil {
-		return err
+	result := repository.db.WithContext(ctx).Create(&entitys.Commit{
+		UserId: uint64(input.IdLogin),
+		PageId: uint64(input.IdServicePage),
+		Commit: input.Commit,
+	})
+
+	if result.Error != nil {
+		return result.Error
 	}
 
 	return nil
 }
 
-func (c *commitRepository) GetCommitByServicePageId(servicePageId int) ([]dto.CommitOutput, error) {
+func (repository *commitRepository) GetCommitByServicePageId(servicePageId int) ([]dto.CommitOutput, error) {
+	var outputList []dto.CommitOutput
+
 	ctx, cancel := context.WithTimeout(context.Background(), consts.QueryTimeoutMedium)
 	defer cancel()
 
 	query := fmt.Sprintf(`SELECT l.login, c.commit FROM commit as c INNER JOIN service as s ON s.id = c.fk_service 
 	INNER JOIN login as l ON s.fk_login = l.id WHERE c.fk_service = %x`, servicePageId)
 
-	rows, err := c.db.QueryContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
+	result := repository.db.WithContext(ctx).
+		Raw(query).
+		Scan(&outputList)
 
-	var outputList []dto.CommitOutput
-
-	for rows.Next() {
-		output := dto.CommitOutput{}
-		rows.Scan(output.Login, output.Commit)
-		outputList = append(outputList, output)
+	if result.Error != nil {
+		return nil, result.Error
 	}
 
 	return outputList, nil

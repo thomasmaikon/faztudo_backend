@@ -1,54 +1,59 @@
 package loginService
 
 import (
-	"database/sql"
 	"projeto/FazTudo/dto"
-	"projeto/FazTudo/infrastructure/database"
 	"projeto/FazTudo/repositorys"
 )
 
+type LoginService interface {
+	CredentialIsValid(input dto.LoginDTO) bool
+	CreateCredential(input dto.LoginDTO) (string, error)
+	CreateJWT(input dto.LoginDTO) (string, error)
+	ValidateJWT(token string) (string, bool)
+	GetIdByLogin(login string) (int, error)
+}
+
 type loginService struct {
-	db *sql.DB
+	repositorys.RepositoryLogin
+	JwtService
 }
 
-func NewLoginSerice() *loginService {
+func NewLoginService() LoginService {
 	return &loginService{
-		db: database.GetDBAccess(),
+		RepositoryLogin: repositorys.NewLoginRepository(),
+		JwtService:      JwtService{},
 	}
 }
 
-func (service *loginService) ValidateCredential(input dto.LoginDTO) bool {
-	repository := repositorys.NewLoginRepository(service.db)
+func (service *loginService) CredentialIsValid(input dto.LoginDTO) bool {
 
-	_, err := repository.FindLogin(input)
+	value, err := service.RepositoryLogin.FindLogin(input)
 
-	if err != nil {
-		return false
+	if err == nil && value == input {
+		return true
 	}
 
-	return true
+	return false
 }
 
-func (sercice *loginService) CreateCredential(input dto.LoginDTO) (string, error) {
+func (service *loginService) CreateCredential(input dto.LoginDTO) (string, error) {
 
-	repository := repositorys.NewLoginRepository(sercice.db)
-
-	err := repository.CreateLogin(input)
+	err := service.RepositoryLogin.CreateLogin(input)
 	if err != nil {
 		return "", err
 	}
 
-	return generateToken(input)
+	return service.JwtService.GenerateToken(input)
 }
 
 func (service *loginService) CreateJWT(input dto.LoginDTO) (string, error) {
-	return generateToken(input)
+	return service.JwtService.GenerateToken(input)
 }
 
 func (service *loginService) ValidateJWT(token string) (string, bool) {
-	return validateToken(token)
+	return service.JwtService.ValidateToken(token)
 }
 
 func (service *loginService) GetIdByLogin(login string) (int, error) {
-	return repositorys.NewLoginRepository(service.db).GetIdByLogin(login)
+	return service.RepositoryLogin.GetIdByLogin(login)
 }

@@ -7,9 +7,9 @@ import (
 )
 
 func TestAddingCommit(t *testing.T) {
-	loginRepository := repositorys.NewLoginRepository(db)
-	serviceRepository := repositorys.NewServicesPage(db)
-	commitRepository := repositorys.NewCommitRepository(db)
+	loginRepository := repositorys.NewLoginRepository()
+	serviceRepository := repositorys.NewServicesPageRepository()
+	commitRepository := repositorys.NewCommitRepository()
 
 	login := dto.LoginDTO{
 		Login:    "exampleCommitLogin@hotmail.com",
@@ -58,17 +58,17 @@ func TestAddingCommit(t *testing.T) {
 
 func TestAddingCommitThatLoginAndServicePageDoesnotExist(t *testing.T) {
 
-	commitRepository := repositorys.NewCommitRepository(db)
+	commitRepository := repositorys.NewCommitRepository()
 
 	commit := dto.CommitInput{
-		IdLogin:       0,
-		IdServicePage: 0,
+		IdLogin:       1,
+		IdServicePage: 1,
 		Commit:        "example commit that i use in my test",
 	}
 
 	result := commitRepository.AddCommit(commit)
 
-	if result == nil {
+	if result != nil {
 		t.Fatal("Expected Error, because id at login and servicePage doesnot exist")
 	}
 

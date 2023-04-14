@@ -12,12 +12,12 @@ func CreateLogin(ctx *gin.Context) {
 	var login dto.LoginDTO
 	ctx.BindJSON(&login)
 
-	exist := loginService.NewLoginSerice().ValidateCredential(login)
+	exist := loginService.NewLoginService().CredentialIsValid(login)
 
 	if exist {
 		ctx.JSON(http.StatusConflict, gin.H{})
 	} else {
-		token, err := loginService.NewLoginSerice().CreateCredential(login)
+		token, err := loginService.NewLoginService().CreateCredential(login)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{})
 		} else {
@@ -32,11 +32,11 @@ func ValidateCrendential(ctx *gin.Context) {
 	var login dto.LoginDTO
 	ctx.BindJSON(&login)
 
-	isValid := loginService.NewLoginSerice().ValidateCredential(login)
+	isValid := loginService.NewLoginService().CredentialIsValid(login)
 
 	if isValid {
 
-		token, err := loginService.NewLoginSerice().CreateJWT(login)
+		token, err := loginService.NewLoginService().CreateJWT(login)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{})
 		}

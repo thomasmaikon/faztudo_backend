@@ -9,7 +9,7 @@ import (
 func TestCriateSimpleService(t *testing.T) {
 
 	// initialize login for tests
-	repositoryLogin := repositorys.NewLoginRepository(db)
+	repositoryLogin := repositorys.NewLoginRepository()
 	input := dto.LoginDTO{
 		Login:    "TestServicePage1@test.com",
 		Password: "simplePassword",
@@ -20,7 +20,7 @@ func TestCriateSimpleService(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	repository := repositorys.NewServicesPage(db)
+	repository := repositorys.NewServicesPageRepository()
 
 	servicePage := dto.ServicePageInput{
 		Name:        "test",
@@ -37,7 +37,7 @@ func TestCriateSimpleService(t *testing.T) {
 
 func TestAmountAtPages(t *testing.T) {
 	// initialize login for tests
-	repositoryLogin := repositorys.NewLoginRepository(db)
+	repositoryLogin := repositorys.NewLoginRepository()
 	input := dto.LoginDTO{
 		Login:    "TestServicePage2@test.com",
 		Password: "simplePassword",
@@ -48,7 +48,7 @@ func TestAmountAtPages(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	repository := repositorys.NewServicesPage(db)
+	repository := repositorys.NewServicesPageRepository()
 
 	for i := 1; i <= 3; i++ {
 		servicePage := dto.ServicePageInput{
@@ -71,13 +71,13 @@ func TestAmountAtPages(t *testing.T) {
 	}
 
 	if expectedAmountPages != result {
-		t.Fatalf("Total pages 'result' value differente are expected, [%x] != [%x]", expectedAmountPages, result)
+		t.Fatalf("Total pages 'result' value [%x] differente are [%x] expected", expectedAmountPages, result)
 	}
 }
 
 func TestPaginateService(t *testing.T) {
 	// initialize login for tests
-	repositoryLogin := repositorys.NewLoginRepository(db)
+	repositoryLogin := repositorys.NewLoginRepository()
 	input := dto.LoginDTO{
 		Login:    "TestServicePage3@test.com",
 		Password: "simplePassword",
@@ -87,7 +87,7 @@ func TestPaginateService(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	repository := repositorys.NewServicesPage(db)
+	repository := repositorys.NewServicesPageRepository()
 
 	for i := 1; i <= 3; i++ {
 

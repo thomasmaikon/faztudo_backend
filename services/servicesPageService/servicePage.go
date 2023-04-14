@@ -1,46 +1,41 @@
 package servicesPageServices
 
 import (
-	"database/sql"
 	"projeto/FazTudo/dto"
-	"projeto/FazTudo/infrastructure/database"
 	"projeto/FazTudo/repositorys"
 	"projeto/FazTudo/services/loginService"
 )
 
 type servicesPage struct {
-	db *sql.DB
+	loginService.LoginService
+	repositorys.RepositoryServicePage
 }
 
 const paginationSize = 5
 
 func NewServicePage() *servicesPage {
 	return &servicesPage{
-		db: database.GetDBAccess(),
+		RepositoryServicePage: repositorys.NewServicesPageRepository(),
+		LoginService:          loginService.NewLoginService(),
 	}
 }
 
 func (service *servicesPage) GetAllServicesPaginateds(index int) ([]dto.ServicePageOutput, error) {
-	repository := repositorys.NewServicesPage(service.db)
-	return repository.GetAllServicesPaginated(index, paginationSize)
+
+	return service.RepositoryServicePage.GetAllServicesPaginated(index, paginationSize)
 }
 
 func (service *servicesPage) GetAmountPages() (int, error) {
-	repository := repositorys.NewServicesPage(service.db)
-
-	return repository.GetAmountAtPages(paginationSize)
+	return service.RepositoryServicePage.GetAmountAtPages(paginationSize)
 }
 
 func (service *servicesPage) CreateService(input dto.ServicePageInput, login string) error {
-	serviceLogin := loginService.NewLoginSerice()
-	repository := repositorys.NewServicesPage(service.db)
-
-	id, err := serviceLogin.GetIdByLogin(login)
+	id, err := service.LoginService.GetIdByLogin(login)
 	if err != nil {
 		return err
 	}
 
-	err = repository.CreateServicePage(input, id)
+	err = service.RepositoryServicePage.CreateServicePage(input, id)
 	if err != nil {
 		return err
 	}
@@ -49,8 +44,7 @@ func (service *servicesPage) CreateService(input dto.ServicePageInput, login str
 }
 
 func (service *servicesPage) GetAllServicesPageByLogin(login string) []dto.ServicePageOutput {
-	repository := repositorys.NewServicesPage(service.db)
-	output, err := repository.GetServicesPageByLogin(login)
+	output, err := service.RepositoryServicePage.GetServicesPageByLogin(login)
 	if err != nil {
 		return nil
 	}

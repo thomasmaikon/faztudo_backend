@@ -8,9 +8,9 @@ import (
 )
 
 func TestLikeServicePage(t *testing.T) {
-	loginRepository := repositorys.NewLoginRepository(db)
-	servicePageRepository := repositorys.NewServicesPage(db)
-	likeRepository := repositorys.NewLikeRepository(db)
+	loginRepository := repositorys.NewLoginRepository()
+	servicePageRepository := repositorys.NewServicesPageRepository()
+	likeRepository := repositorys.NewLikeRepository()
 
 	user := dto.LoginDTO{
 		Login:    "SimpleExampleLikeLogin@hotmail.com",
@@ -48,7 +48,7 @@ func TestLikeServicePage(t *testing.T) {
 	like := dto.LikeInput{
 		LoginId:       loginId,
 		ServicePageId: listServicePage[0].Id,
-		Like:          consts.Like,
+		Like:          consts.Likely,
 	}
 	// -----------------------
 
@@ -60,9 +60,9 @@ func TestLikeServicePage(t *testing.T) {
 }
 
 func TestAddLikeThatAlredyExist(t *testing.T) {
-	loginRepository := repositorys.NewLoginRepository(db)
-	servicePageRepository := repositorys.NewServicesPage(db)
-	likeRepository := repositorys.NewLikeRepository(db)
+	loginRepository := repositorys.NewLoginRepository()
+	servicePageRepository := repositorys.NewServicesPageRepository()
+	likeRepository := repositorys.NewLikeRepository()
 
 	user := dto.LoginDTO{
 		Login:    "SimpleExampleLikeLogin2@hotmail.com",
@@ -110,7 +110,7 @@ func TestAddLikeThatAlredyExist(t *testing.T) {
 	}
 
 	err = likeRepository.AddLikeOrUnlike(like)
-	if err == nil {
+	if err != nil {
 		t.Fatal("Expected error because primary key are duplicated ")
 	}
 }

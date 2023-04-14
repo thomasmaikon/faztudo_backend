@@ -2,29 +2,41 @@ package repositorys
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
 	"projeto/FazTudo/consts"
 	"projeto/FazTudo/dto"
+	"projeto/FazTudo/entitys"
+	"projeto/FazTudo/infrastructure/database"
+
+	"gorm.io/gorm"
 )
 
-type likeRepository struct {
-	db *sql.DB
+type RepositoryLike interface {
+	AddLikeOrUnlike(input dto.LikeInput) error
 }
 
-func NewLikeRepository(db *sql.DB) *likeRepository {
-	return &likeRepository{db}
+type likeRepository struct {
+	db *gorm.DB
+}
+
+func NewLikeRepository() RepositoryLike {
+	return &likeRepository{database.GetDB()}
 }
 
 func (l *likeRepository) AddLikeOrUnlike(input dto.LikeInput) error {
 	ctx, cancel := context.WithTimeout(context.Background(), consts.QueryTimeoutMedium)
 	defer cancel()
 
-	query := fmt.Sprintf("INSERT INTO likes (fk_service_page, fk_login, liker) VALUES (%x, %x, %x)", input.ServicePageId, input.LoginId, input.Like)
+	//query := fmt.Sprintf("INSERT INTO likes (fk_service_page, fk_login, liker) VALUES (%x, %x, %x)", input.ServicePageId, input.LoginId, input.Like)
 
-	_, err := l.db.ExecContext(ctx, query)
-	if err != nil {
-		return err
+	err := l.db.WithContext(ctx).Create(&entitys.Like{
+		LoginId:       input.LoginId,
+		ServicePageId: input.ServicePageId,
+		Like:          input.Like,
+	})
+
+	//.ExecContext(ctx, query)
+	if err.Error != nil {
+		return err.Error
 	}
 	return nil
 }

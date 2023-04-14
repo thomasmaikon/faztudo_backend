@@ -10,7 +10,20 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func generateToken(input dto.LoginDTO) (string, error) {
+type ServiceJWT interface {
+	GenerateToken(input dto.LoginDTO) (string, error)
+	ValidateToken(token string) (string, bool)
+}
+
+type JwtService struct {
+	ServiceJWT
+}
+
+func NewJWTService() ServiceJWT {
+	return &JwtService{}
+}
+
+func (service *JwtService) GenerateToken(input dto.LoginDTO) (string, error) {
 	key := []byte(os.Getenv("secretkey"))
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
@@ -26,7 +39,7 @@ func generateToken(input dto.LoginDTO) (string, error) {
 	return result, nil
 }
 
-func validateToken(token string) (string, bool) {
+func (service *JwtService) ValidateToken(token string) (string, bool) {
 
 	result, _ := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -51,7 +64,9 @@ func IsAuthorized(ctx *gin.Context) {
 	authHeader := ctx.GetHeader("Authorization")
 	tokenString := authHeader[len(BEARER_SCHEMA)+1:]
 
-	email, isValid := validateToken(tokenString)
+	service := &JwtService{}
+
+	email, isValid := service.ValidateToken(tokenString)
 
 	if !isValid {
 		ctx.AbortWithStatus(401)

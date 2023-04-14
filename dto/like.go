@@ -1,7 +1,9 @@
 package dto
 
+import "projeto/FazTudo/consts"
+
 type LikeInput struct {
 	LoginId       int
 	ServicePageId int
-	Like          int
+	Like          consts.EnumLikeType
 }
