@@ -100,7 +100,7 @@ func TestAddLikeThatAlredyExist(t *testing.T) {
 	like := dto.LikeInput{
 		LoginId:       loginId,
 		ServicePageId: listServicePage[0].Id,
-		Like:          consts.Like,
+		Like:          consts.Likely,
 	}
 	// -----------------------
 

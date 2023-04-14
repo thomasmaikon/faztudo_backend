@@ -3,6 +3,9 @@ package IntegrationTest
 import (
 	"projeto/FazTudo/dto"
 	"projeto/FazTudo/repositorys"
+	"projeto/FazTudo/services/commitService"
+	"projeto/FazTudo/services/loginService"
+	servicesPageServices "projeto/FazTudo/services/servicesPageService"
 	"testing"
 )
 
@@ -38,6 +41,8 @@ func TestCriateSimpleService(t *testing.T) {
 func TestAmountAtPages(t *testing.T) {
 	// initialize login for tests
 	repositoryLogin := repositorys.NewLoginRepository()
+	repository := repositorys.NewServicesPageRepository()
+
 	input := dto.LoginDTO{
 		Login:    "TestServicePage2@test.com",
 		Password: "simplePassword",
@@ -47,8 +52,6 @@ func TestAmountAtPages(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	repository := repositorys.NewServicesPageRepository()
 
 	for i := 1; i <= 3; i++ {
 		servicePage := dto.ServicePageInput{
@@ -78,6 +81,8 @@ func TestAmountAtPages(t *testing.T) {
 func TestPaginateService(t *testing.T) {
 	// initialize login for tests
 	repositoryLogin := repositorys.NewLoginRepository()
+	repository := repositorys.NewServicesPageRepository()
+
 	input := dto.LoginDTO{
 		Login:    "TestServicePage3@test.com",
 		Password: "simplePassword",
@@ -87,7 +92,6 @@ func TestPaginateService(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	repository := repositorys.NewServicesPageRepository()
 
 	for i := 1; i <= 3; i++ {
 
@@ -120,4 +124,74 @@ func TestPaginateService(t *testing.T) {
 			t.Fatal("Amount at servicePage differnte are expected")
 		}
 	}
+}
+
+func TestGetAmountCommitsInServicePage(t *testing.T) {
+	loginService := loginService.NewLoginService()
+	servicePageService := servicesPageServices.NewServicePage()
+	commitService := commitService.NewCommitService()
+
+	inputs := []dto.LoginDTO{
+		{
+			Login:    "TestServicePage3@test.com",
+			Password: "simplePassword",
+		},
+		{
+			Login:    "TestServicePage4@test.com",
+			Password: "simplePassword",
+		},
+		{
+			Login:    "TestServicePage5@test.com",
+			Password: "simplePassword",
+		},
+	}
+	for _, input := range inputs {
+		loginService.CreateCredential(input)
+	}
+
+	servicePageService.CreateService(dto.ServicePageInput{
+		Name:        "Simple Example",
+		Image:       "paht at image",
+		Value:       0.0,
+		Description: "any",
+	}, inputs[0].Login)
+
+	services := servicePageService.GetAllServicesPageByLogin(inputs[0].Login)
+
+	idUser1, _ := loginService.GetIdByLogin(inputs[1].Login)
+	idUser2, _ := loginService.GetIdByLogin(inputs[2].Login)
+
+	commits := []dto.CommitInput{
+		{
+			IdLogin:       idUser1,
+			IdServicePage: services[0].Id,
+			Commit:        "any 1",
+		},
+		{
+			IdLogin:       idUser1,
+			IdServicePage: services[0].Id,
+			Commit:        "any 2",
+		},
+		{
+			IdLogin:       idUser2,
+			IdServicePage: services[0].Id,
+			Commit:        "any 3",
+		},
+	}
+
+	for _, commit := range commits {
+		commitService.AddCommit(commit)
+	}
+
+	expetedAmountAtCommitsInPage := len(commits)
+	commitsResulted, err := commitService.GetCommitByServicePage(services[0].Id)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if expetedAmountAtCommitsInPage != len(commitsResulted) {
+		t.Fatal("Amount at commits in servicePage differnte are expected")
+	}
+
 }

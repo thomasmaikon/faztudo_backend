@@ -54,7 +54,6 @@ func (repository *loginRepository) CreateLogin(inputDTO dto.LoginDTO) error {
 		return err.Error
 	}
 
-	//fmt.Println(rows.RowsAffected())
 	return nil
 }
 

@@ -64,7 +64,7 @@ func IsAuthorized(ctx *gin.Context) {
 	authHeader := ctx.GetHeader("Authorization")
 	tokenString := authHeader[len(BEARER_SCHEMA)+1:]
 
-	service := &JwtService{}
+	service := NewJWTService()
 
 	email, isValid := service.ValidateToken(tokenString)
 
