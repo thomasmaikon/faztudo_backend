@@ -1,7 +1,6 @@
 package IntegrationTest
 
 import (
-	"database/sql"
 	"log"
 	"os"
 	"projeto/FazTudo/infrastructure/App"
@@ -12,8 +11,6 @@ import (
 
 	_ "github.com/lib/pq"
 )
-
-var db *sql.DB
 
 func TestMain(m *testing.M) {
 
