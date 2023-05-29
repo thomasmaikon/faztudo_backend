@@ -43,7 +43,7 @@ func ValidateCrendential(ctx *gin.Context) {
 
 		var bearer string = "Bearer " + token
 		ctx.Writer.Header().Set("Authorization", bearer)
-		ctx.JSON(http.StatusAccepted, gin.H{})
+		ctx.JSON(http.StatusAccepted, gin.H{"token": token})
 	} else {
 		ctx.JSON(http.StatusForbidden, gin.H{})
 	}
