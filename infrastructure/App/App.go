@@ -23,7 +23,7 @@ func NewApp() *appEngine {
 	corsConfig := cors.New(
 		cors.Config{
 			AllowOrigins: []string{"http://localhost:3000"},
-			AllowMethods: []string{"PUT", "PATCH"},
+			AllowMethods: []string{"PUT", "PATCH", "POST", "GET"},
 			AllowHeaders: []string{"Origin", "Content-Length", "Content-Type"},
 			MaxAge:       12 * time.Hour,
 		},
@@ -44,9 +44,12 @@ func (app *appEngine) InitializeRoutes() *appEngine {
 
 	app.Router.GET("/servicepage/all/:index", controller.GetAllServicePage)
 
-	app.Router.POST("/servicepage/all/:id/commit", loginService.IsAuthorized, controller.CreateCommitInservicePage)
-	app.Router.POST("/servicepage/create", loginService.IsAuthorized, controller.CreateServicePage)
-	app.Router.GET("/servicepage/myservices", loginService.IsAuthorized, controller.GetMyServicesPage)
+	servicepageWithAuthentication := app.Router.Group("/servicepage", loginService.IsAuthorized)
+	{
+		servicepageWithAuthentication.POST("/all/:id/commit", controller.CreateCommitInservicePage)
+		servicepageWithAuthentication.POST("/create", controller.CreateServicePage)
+		servicepageWithAuthentication.GET("/myservices", controller.GetMyServicesPage)
+	}
 
 	return app
 }
