@@ -16,15 +16,15 @@ func TestAddingCommit(t *testing.T) {
 		Password: "123qwe",
 	}
 
-	err := loginRepository.CreateLogin(login)
+	userLogin, err := loginRepository.CreateLogin(login)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
-	loginId, err := loginRepository.GetIdByLogin(login.Login)
+	/* loginId, err := loginRepository.GetIdByLogin(login.Login)
 	if err != nil {
 		t.Fatal(err.Error())
-	}
+	} */
 
 	servicePage := dto.ServicePageInput{
 		Name:        "Input Commit",
@@ -33,19 +33,19 @@ func TestAddingCommit(t *testing.T) {
 		Description: "Simple Example for input commit",
 	}
 
-	err = serviceRepository.CreateServicePage(servicePage, loginId)
+	err = serviceRepository.CreateServicePage(servicePage, userLogin.Id)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
-	listServicePage, err := serviceRepository.GetServicesPageByLogin(login.Login)
+	listServicePage, err := serviceRepository.GetServicesPage(userLogin.Id)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
 	commit := dto.CommitInput{
-		IdLogin:       loginId,
-		IdServicePage: listServicePage[0].Id,
+		UserId:        userLogin.Id,
+		ServicePageId: listServicePage[0].Id,
 		Commit:        "example commit that i use in my test",
 	}
 
@@ -61,8 +61,8 @@ func TestAddingCommitThatLoginAndServicePageDoesnotExist(t *testing.T) {
 	commitRepository := repositorys.NewCommitRepository()
 
 	commit := dto.CommitInput{
-		IdLogin:       1,
-		IdServicePage: 1,
+		UserId:        1,
+		ServicePageId: 1,
 		Commit:        "example commit that i use in my test",
 	}
 

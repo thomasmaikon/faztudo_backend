@@ -29,13 +29,9 @@ func (service *servicesPage) GetAmountPages() (int, error) {
 	return service.RepositoryServicePage.GetAmountAtPages(paginationSize)
 }
 
-func (service *servicesPage) CreateService(input dto.ServicePageInput, login string) error {
-	id, err := service.LoginService.GetIdByLogin(login)
-	if err != nil {
-		return err
-	}
+func (service *servicesPage) CreateService(input dto.ServicePageInput, userId int) error {
 
-	err = service.RepositoryServicePage.CreateServicePage(input, id)
+	err := service.RepositoryServicePage.CreateServicePage(input, userId)
 	if err != nil {
 		return err
 	}
@@ -43,8 +39,8 @@ func (service *servicesPage) CreateService(input dto.ServicePageInput, login str
 	return nil
 }
 
-func (service *servicesPage) GetAllServicesPageByLogin(login string) []dto.ServicePageOutput {
-	output, err := service.RepositoryServicePage.GetServicesPageByLogin(login)
+func (service *servicesPage) GetAllServicesPage(userId int) []dto.ServicePageOutput {
+	output, err := service.RepositoryServicePage.GetServicesPage(userId)
 	if err != nil {
 		return nil
 	}

@@ -5,8 +5,8 @@ type SimpleCommitInput struct {
 }
 
 type CommitInput struct {
-	IdLogin       int
-	IdServicePage int
+	UserId        int
+	ServicePageId int
 	Commit        string
 }
 

@@ -3,7 +3,7 @@ package loginService
 import (
 	"fmt"
 	"os"
-	"projeto/FazTudo/dto"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -11,7 +11,7 @@ import (
 )
 
 type ServiceJWT interface {
-	GenerateToken(input dto.LoginDTO) (string, error)
+	GenerateToken(userId int) (string, error)
 	ValidateToken(token string) (string, bool)
 }
 
@@ -23,11 +23,11 @@ func NewJWTService() ServiceJWT {
 	return &JwtService{}
 }
 
-func (service *JwtService) GenerateToken(input dto.LoginDTO) (string, error) {
+func (service *JwtService) GenerateToken(userId int) (string, error) {
 	key := []byte(os.Getenv("secretkey"))
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		Issuer:    input.Login,
+		Subject:   strconv.Itoa(userId),
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 	})
 
@@ -50,8 +50,8 @@ func (service *JwtService) ValidateToken(token string) (string, bool) {
 	})
 
 	if claims, ok := result.Claims.(jwt.MapClaims); ok && result.Valid {
-		data := claims["iss"].(string)
-		return data, true
+		userId := claims["sub"].(string)
+		return userId, true
 	} else {
 		return "", false
 	}
@@ -66,10 +66,12 @@ func IsAuthorized(ctx *gin.Context) {
 
 	service := NewJWTService()
 
-	email, isValid := service.ValidateToken(tokenString)
+	id, isValid := service.ValidateToken(tokenString)
 
 	if !isValid {
 		ctx.AbortWithStatus(401)
+		return
 	}
-	ctx.AddParam("email", email)
+	ctx.Set("userId", id)
+	ctx.Next()
 }

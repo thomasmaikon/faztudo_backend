@@ -14,8 +14,8 @@ import (
 type RepositoryServicePage interface {
 	GetAllServicesPaginated(paginationIndex, paginationSize int) ([]dto.ServicePageOutput, error)
 	GetAmountAtPages(paginationSize int) (int, error)
-	CreateServicePage(input dto.ServicePageInput, fkLogin int) error
-	GetServicesPageByLogin(login string) ([]dto.ServicePageOutput, error)
+	CreateServicePage(input dto.ServicePageInput, userId int) error
+	GetServicesPage(userId int) ([]dto.ServicePageOutput, error)
 	GetServicePageById(id int) (dto.ServicePageOutput, error)
 }
 
@@ -69,11 +69,11 @@ func (repository *servicesPageRepository) GetAmountAtPages(paginationSize int) (
 	return result, nil
 }
 
-func (repository *servicesPageRepository) CreateServicePage(input dto.ServicePageInput, fkLogin int) error {
+func (repository *servicesPageRepository) CreateServicePage(input dto.ServicePageInput, userId int) error {
 	context, cancelContext := context.WithTimeout(context.Background(), consts.QueryTimeoutMedium)
 	defer cancelContext()
 
-	query := fmt.Sprintf("INSERT INTO service (fk_login, name, image, value, description) VALUES (%x,'%s', '%s', '%f', '%s')", fkLogin, input.Name, input.Image, input.Value, input.Description)
+	query := fmt.Sprintf("INSERT INTO service (fk_user, name, image, value, description) VALUES (%x,'%s', '%s', '%f', '%s')", userId, input.Name, input.Image, input.Value, input.Description)
 
 	err := repository.db.WithContext(context).Exec(query)
 	if err.Error != nil {
@@ -83,14 +83,14 @@ func (repository *servicesPageRepository) CreateServicePage(input dto.ServicePag
 	return nil
 }
 
-func (repository *servicesPageRepository) GetServicesPageByLogin(login string) ([]dto.ServicePageOutput, error) {
+func (repository *servicesPageRepository) GetServicesPage(userId int) ([]dto.ServicePageOutput, error) {
 
 	var outputList []dto.ServicePageOutput
 
 	context, cancelContext := context.WithTimeout(context.Background(), consts.QueryTimeoutMedium)
 	defer cancelContext()
 
-	query := fmt.Sprintf("SELECT S.id, S.name, S.description, S.image, S.value, S.positive_evaluations, S.negative_evaluations FROM service AS S INNER JOIN credentials AS C on c.ID = S.fk_login WHERE C.LOGIN = '%s'", login)
+	query := fmt.Sprintf("SELECT S.id, S.name, S.description, S.image, S.value, S.positive_evaluations, S.negative_evaluations FROM service AS S WHERE S.fk_user = %x", userId)
 
 	err := repository.db.WithContext(context).Raw(query).Scan(&outputList)
 	if err.Error != nil {

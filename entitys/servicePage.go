@@ -2,7 +2,7 @@ package entitys
 
 type ServicePage struct {
 	Id                  uint64 `gorm:"primarykey;autoincrement"`
-	UserId              uint64 `gorm:"column:fk_login;foreignKey:Id"`
+	UserId              uint64 `gorm:"column:fk_user;foreignKey:Id"`
 	Name                string
 	Description         string
 	Image               string

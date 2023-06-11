@@ -24,17 +24,17 @@ func TestLikeServicePage(t *testing.T) {
 		Description: "any",
 	}
 
-	err := loginRepository.CreateLogin(user)
+	userLogin, err := loginRepository.CreateLogin(user)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
-	loginId, err := loginRepository.GetIdByLogin(user.Login)
+	/* loginId, err := loginRepository.GetIdByLogin(user.Login)
 	if err != nil {
 		t.Fatal(err.Error())
-	}
+	} */
 
-	err = servicePageRepository.CreateServicePage(servicePage, loginId)
+	err = servicePageRepository.CreateServicePage(servicePage, userLogin.Id)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -46,7 +46,7 @@ func TestLikeServicePage(t *testing.T) {
 
 	// -----------------------
 	like := dto.LikeInput{
-		LoginId:       loginId,
+		LoginId:       userLogin.Id,
 		ServicePageId: listServicePage[0].Id,
 		Like:          consts.Likely,
 	}
@@ -76,17 +76,17 @@ func TestAddLikeThatAlredyExist(t *testing.T) {
 		Description: "any",
 	}
 
-	err := loginRepository.CreateLogin(user)
+	userLogin, err := loginRepository.CreateLogin(user)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
-	loginId, err := loginRepository.GetIdByLogin(user.Login)
+	/* loginId, err := loginRepository.GetIdByLogin(user.Login)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-
-	err = servicePageRepository.CreateServicePage(servicePage, loginId)
+ */
+	err = servicePageRepository.CreateServicePage(servicePage, userLogin.Id)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -98,7 +98,7 @@ func TestAddLikeThatAlredyExist(t *testing.T) {
 
 	// -----------------------
 	like := dto.LikeInput{
-		LoginId:       loginId,
+		LoginId:       userLogin.Id,
 		ServicePageId: listServicePage[0].Id,
 		Like:          consts.Likely,
 	}

@@ -1,27 +1,26 @@
 package unittest
 
 import (
-	"projeto/FazTudo/dto"
 	"projeto/FazTudo/services/loginService"
+	"strconv"
 	"testing"
 )
 
 func TestValidateJWT(t *testing.T) {
 	service := loginService.NewJWTService()
 
-	input := dto.LoginDTO{
-		Login:    "simpleExampleTest@hotmail.com",
-		Password: "simplePassword123",
-	}
+	simpleId := 10
 
-	token, err := service.GenerateToken(input)
+	token, err := service.GenerateToken(simpleId)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
-	expected, ok := service.ValidateToken(token)
+	received, ok := service.ValidateToken(token)
 
-	if expected != input.Login && !ok {
+	output, _ := strconv.Atoi(received)
+
+	if output != simpleId && !ok {
 		t.Fatal("Erro when validate token")
 	}
 }

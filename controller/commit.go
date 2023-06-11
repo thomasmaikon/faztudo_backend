@@ -26,16 +26,16 @@ func GetCommitsFromServicePage(ctx *gin.Context) {
 
 func CreateCommitInservicePage(ctx *gin.Context) {
 	servicePageId := ctx.Param("id")
-	login, isPresent := ctx.Params.Get("email")
-
-	if isPresent != true {
+	pageId, err := strconv.Atoi(servicePageId)
+	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{})
 		return
 	}
 
-	pageId, err := strconv.Atoi(servicePageId)
+	id := ctx.GetString("userId")
+	userId, err := strconv.Atoi(id)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{})
+		ctx.JSON(http.StatusBadRequest, gin.H{"info": err.Error()})
 		return
 	}
 
@@ -44,7 +44,7 @@ func CreateCommitInservicePage(ctx *gin.Context) {
 	var commit dto.SimpleCommitInput
 	ctx.BindJSON(&commit)
 
-	resutl := service.CreateCommit(login, pageId, commit)
+	resutl := service.CreateCommit(userId, pageId, commit)
 
 	if resutl != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{})

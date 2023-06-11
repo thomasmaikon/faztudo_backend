@@ -28,8 +28,8 @@ func (repository *commitRepository) AddCommit(input dto.CommitInput) error {
 	defer cancel()
 
 	result := repository.db.WithContext(ctx).Create(&entitys.Commit{
-		UserId: uint64(input.IdLogin),
-		PageId: uint64(input.IdServicePage),
+		UserId: uint64(input.UserId),
+		PageId: uint64(input.ServicePageId),
 		Commit: input.Commit,
 	})
 

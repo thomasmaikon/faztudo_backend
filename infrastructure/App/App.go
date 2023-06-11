@@ -61,6 +61,11 @@ func (app *appEngine) RunMigrations(db *gorm.DB) *appEngine {
 		log.Fatalf(err.Error())
 	}
 
+	err = db.AutoMigrate(&entitys.User{})
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
 	err = db.AutoMigrate(&entitys.ServicePage{})
 	if err != nil {
 		log.Fatalf(err.Error())

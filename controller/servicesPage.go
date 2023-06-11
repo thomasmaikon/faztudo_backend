@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
 	"projeto/FazTudo/dto"
 	servicesPageServices "projeto/FazTudo/services/servicesPageService"
@@ -16,9 +15,11 @@ func CreateServicePage(ctx *gin.Context) {
 
 	service := servicesPageServices.NewServicePage()
 
-	email, _ := ctx.Params.Get("email")
+	id := ctx.GetString("userId")
 
-	err := service.CreateService(input, fmt.Sprintf("%s", email))
+	userId, err := strconv.Atoi(id)
+
+	err = service.CreateService(input, userId)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{})
@@ -44,15 +45,17 @@ func GetAllServicePage(ctx *gin.Context) {
 }
 
 func GetMyServicesPage(ctx *gin.Context) {
-	service := servicesPageServices.NewServicePage()
-	email, ok := ctx.Params.Get("email")
-	if !ok {
+
+	id := ctx.GetString("userId")
+	userId, err := strconv.Atoi(id)
+	if err != nil {
 		ctx.JSON(http.StatusBadGateway, gin.H{})
 		return
 	}
 
-	result := service.GetAllServicesPageByLogin(email)
+	service := servicesPageServices.NewServicePage()
 
+	result := service.GetAllServicesPage(userId)
 	if result != nil {
 		ctx.JSON(http.StatusOK, gin.H{"services": result})
 	} else {

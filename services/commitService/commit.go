@@ -27,18 +27,18 @@ func (service *commitService) GetCommitByServicePage(servicePageid int) ([]dto.C
 	return output, nil
 }
 
-func (service *commitService) CreateCommit(login string, servicePageId int, commit dto.SimpleCommitInput) error {
+func (service *commitService) CreateCommit(userId int, servicePageId int, commit dto.SimpleCommitInput) error {
 	//	service := loginService.NewLoginSerice()
 
-	id, err := service.LoginService.GetIdByLogin(login)
+	/* id, err := service.LoginService.GetIdByLogin(login)
 	if err != nil {
 		return err
-	}
+	} */
 
 	//repository := repositorys.NewCommitRepository(c.db)
 	return service.RepositoryCommit.AddCommit(dto.CommitInput{
-		IdLogin:       id,
-		IdServicePage: servicePageId,
+		UserId:        userId,
+		ServicePageId: servicePageId,
 		Commit:        commit.Commit,
 	})
 }
